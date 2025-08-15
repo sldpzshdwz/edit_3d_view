@@ -1,22 +1,39 @@
 <template>
-    <div ref="editorContainer" class="editor-container"></div>
-    <head>
+  <div ref="editorContainer" class="editor-container"></div>
+
 		<title>three.js editor</title>
 		<!-- <meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"> -->
 		
-	</head>
-	
+
+    <el-space direction="horizontal" size="medium" class="f1">
+      <LoadJson @imported="handleImported" class="f2"></LoadJson>
+    </el-space>
+
 </template>
-  
+
+<style scoped>
+.f1 {
+  position: fixed;
+  top: 90vh;
+  left: 10vw;
+  width: auto;
+  height: auto;
+  z-index: 6;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #b9c7d4 !important;
+.f2 {
+  z-index: 7;
+}
+}
+</style>
 <script setup lang="ts">
 
   import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
   import * as THREE from 'three';
   
   // 导入 Editor 的 JS 文件
-
-    
   // @ts-ignore
   import { Editor } from '../../public/three/editor/js/Editor.js';
   // @ts-ignore
@@ -33,6 +50,10 @@
   import { Menubar } from '../../public/three/editor/js/Menubar.js';
   // @ts-ignore
   import { Resizer } from '../../public/three/editor/js/Resizer.js';
+
+  import LoadJson from '@/components/LoadJson.vue';
+
+  import { AOIConfig } from '@/import/AOIConfig';
   
 
   declare global {
@@ -51,7 +72,9 @@
   let sidebar: any;
   let menubar: any;
   let resizer: any;
-  
+  const handleImported = (config: AOIConfig) => {
+    console.log('导入的 AOI 配置:', config);
+  };
   onMounted(() => {
     nextTick(() => {
       
@@ -134,7 +157,7 @@
 
         try {
 
-            navigator.serviceWorker.register( 'sw.js' );
+            navigator.serviceWorker.register( 'three/editor/sw.js' );
 
         } catch ( error ) {
 

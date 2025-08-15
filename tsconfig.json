@@ -11,5 +11,9 @@
     "allowJs": false,
     "esModuleInterop": true,
     "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }

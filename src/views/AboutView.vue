@@ -3,6 +3,7 @@
       <h1>关于页面</h1>
       <p>这是一个 Vue 3 + Three.js Editor 的示例项目</p>
     </div>
+
   </template>
   
   <script setup lang="ts">
