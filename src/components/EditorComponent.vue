@@ -53,7 +53,7 @@
 
   import LoadJson from '@/components/LoadJson.vue';
 
-  import { AOIConfig } from '@/import/AOIConfig';
+  import * as AOI from '@/import/AOIConfig';
   
 
   declare global {
@@ -72,9 +72,34 @@
   let sidebar: any;
   let menubar: any;
   let resizer: any;
-  const handleImported = (config: AOIConfig) => {
-    console.log('导入的 AOI 配置:', config);
+  let AllAOI:AOI.AllAOIInstance={
+    AOIInstances:[]
   };
+  const geometry = new THREE.SphereGeometry(1, 32, 32); // 半径1，32段
+  const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+  const material2 = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const handleImported = (config: AOI.AOIConfig) => {
+    console.log('导入的 AOI 配置:', config);
+    DrawAOI(config);
+  };
+  const DrawAOI= (config: AOI.AOIConfig) =>{
+    for (const aoi of config.aois) {
+      let len=AllAOI.AOIInstances.push({ vertices: [] ,name:aoi.name});
+      for (const point of aoi.aoi) {
+        let cube:THREE.Mesh = new THREE.Mesh( geometry, material2 );
+        //cube.position.set(0, 0, 0);
+        cube.position.set(point.x, point.y, point.z);
+        console.log(point.x," ",point.y," ",point.z);
+        AllAOI.AOIInstances[len-1].vertices.push({
+          at:point,
+          vertex:cube
+        });
+        editor.addObject(cube);
+      }
+
+    }
+
+  }
   onMounted(() => {
     nextTick(() => {
       
