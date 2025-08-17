@@ -54,7 +54,16 @@
   import LoadJson from '@/components/LoadJson.vue';
 
   import * as AOI from '@/import/AOIConfig';
-  
+
+  function updateShow(AllAOI:AOI.AllAOIInstance){
+    AllAOI.AOIInstances.forEach((aoiInstance: AOI.AOIInstance) => {
+      if (aoiInstance.triangles_mesh){
+        editor.scene.remove(aoiInstance.triangles_mesh);
+      }
+      aoiInstance.UpdateAOITriangles();
+      editor.scene.add(aoiInstance.triangles_mesh);
+    })
+  }
 
   declare global {
     interface Window {
@@ -75,16 +84,21 @@
   let AllAOI:AOI.AllAOIInstance={
     AOIInstances:[]
   };
-  const geometry = new THREE.SphereGeometry(1, 32, 32); // 半径1，32段
-  const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-  const material2 = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const geometry = new THREE.SphereGeometry(10, 32, 32); // 半径1，32段
+  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+  material.color.setRGB(0, 0, 256);
+  //const material2 = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+
   const handleImported = (config: AOI.AOIConfig) => {
     console.log('导入的 AOI 配置:', config);
     DrawAOI(config);
   };
   const DrawAOI= (config: AOI.AOIConfig) =>{
     for (const aoi of config.aois) {
-      let len=AllAOI.AOIInstances.push({ vertices: [] ,name:aoi.name});
+      let instance=new AOI.AOIInstance();
+      instance.name=aoi.name;
+      let len=AllAOI.AOIInstances.push(instance);
       // 添加数组检查，防止 undefined 错误
       if (!Array.isArray(aoi.aoi)) {
         console.error(`AOI ${aoi.name} 缺少有效的点数组`);
@@ -94,21 +108,22 @@
       for (const point of aoi.aoi) {
         let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
         // cube.position.set(0, 0, 0);
-        console.log(point[0]," ",point[1]," ",point[2]);
         cube.position.set(point[0], point[1], point[2]);
         editor.addObject(cube)
-        AllAOI.AOIInstances[len-1].vertices.push({
-          at:new AOI.AOIPoint(point[0],point[1],point[2]),
-          vertex:cube
-        });
+        let v=new AOI.vertex();
+        v.vertex=cube;v.at=new AOI.AOIPoint(point[0], point[1], point[2]);
+        AllAOI.AOIInstances[len-1].vertices.push(v);
         ;
       }
-
+      if (AllAOI.AOIInstances[len-1].triangles_mesh){
+        editor.scene.remove(AllAOI.AOIInstances[len-1].triangles_mesh);
+      }
     }
-
+    updateShow(AllAOI);
   }
   onMounted(() => {
     nextTick(() => {
+
       
       // 初始化 Editor
       editor = new Editor();
@@ -197,6 +212,21 @@
 
         }
     });
+
+
+    let frameCount = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      frameCount++;
+      if (frameCount % 5 === 0) {
+        updateShow(AllAOI);
+        frameCount=0;
+      }
+
+    }
+    // 启动循环
+    animate();
     
   }); 
   
