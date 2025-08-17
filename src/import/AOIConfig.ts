@@ -59,6 +59,8 @@ export class AOIInstance {
     triangles:triangle[] = [];
     triangles_mesh: THREE.Mesh | null = null;
     color: THREE.Color|undefined = undefined;
+    scale:number=1;
+    id:number=0;
     updateVertices(){
         this.vertices.forEach((v:vertex)=>{
             v.updateVertex();
@@ -125,5 +127,7 @@ export class AOIInstance {
 }
 
 export class AllAOIInstance {
+    public aoi_duration_threshold: number = 0;
+    public non_distracted_aois: string[] = [];
     AOIInstances:AOIInstance[] = [];
 }

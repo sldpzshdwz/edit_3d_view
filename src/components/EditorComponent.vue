@@ -8,6 +8,8 @@
 
     <el-space direction="horizontal" size="medium" class="f1">
       <LoadJson @imported="handleImported" class="f2"></LoadJson>
+      <AOIExporter :allAOI="AllAOI"></AOIExporter>
+      <button @click="XiFu">顶点吸附</button>
     </el-space>
 
 </template>
@@ -52,9 +54,14 @@
   import { Resizer } from '../../public/three/editor/js/Resizer.js';
 
   import LoadJson from '@/components/LoadJson.vue';
-
+  import AOIExporter from '@/components/ExportJson.vue';
   import * as AOI from '@/import/AOIConfig';
-
+  let isXiFu=false;
+  let XiFuFrom:THREE.Mesh|null=null;
+  const XiFu=()=>{
+    isXiFu=true;
+    XiFuFrom=null;
+  }
   function updateShow(AllAOI:AOI.AllAOIInstance){
     AllAOI.AOIInstances.forEach((aoiInstance: AOI.AOIInstance) => {
       if (aoiInstance.triangles_mesh){
@@ -82,7 +89,9 @@
   let menubar: any;
   let resizer: any;
   let AllAOI:AOI.AllAOIInstance={
-    AOIInstances:[]
+    AOIInstances: [],
+    aoi_duration_threshold: 0,
+    non_distracted_aois: []
   };
   const geometry = new THREE.SphereGeometry(10, 32, 32); // 半径1，32段
   const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -95,9 +104,13 @@
     DrawAOI(config);
   };
   const DrawAOI= (config: AOI.AOIConfig) =>{
+    AllAOI.aoi_duration_threshold=config.aoi_duration_threshold;
+    AllAOI.non_distracted_aois=config.non_distracted_aois;
     for (const aoi of config.aois) {
       let instance=new AOI.AOIInstance();
       instance.name=aoi.name;
+      instance.id=aoi.id;
+      instance.scale=aoi.scale;
       let len=AllAOI.AOIInstances.push(instance);
       // 添加数组检查，防止 undefined 错误
       if (!Array.isArray(aoi.aoi)) {
@@ -218,6 +231,19 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      if (isXiFu){
+        if (XiFuFrom && XiFuFrom!=editor.selected){
+          XiFuFrom.position.copy(editor.selected.position);
+          isXiFu=false;
+        }else{
+          if (XiFuFrom===null){
+            XiFuFrom=editor.selected;
+          }
+          
+        }
+      }
+
+
       frameCount++;
       if (frameCount % 5 === 0) {
         updateShow(AllAOI);
