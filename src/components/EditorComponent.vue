@@ -85,16 +85,23 @@
   const DrawAOI= (config: AOI.AOIConfig) =>{
     for (const aoi of config.aois) {
       let len=AllAOI.AOIInstances.push({ vertices: [] ,name:aoi.name});
+      // 添加数组检查，防止 undefined 错误
+      if (!Array.isArray(aoi.aoi)) {
+        console.error(`AOI ${aoi.name} 缺少有效的点数组`);
+        continue;
+      }
+      console.log(aoi.aoi);
       for (const point of aoi.aoi) {
-        let cube:THREE.Mesh = new THREE.Mesh( geometry, material2 );
-        //cube.position.set(0, 0, 0);
-        cube.position.set(point.x, point.y, point.z);
-        console.log(point.x," ",point.y," ",point.z);
+        let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
+        // cube.position.set(0, 0, 0);
+        console.log(point[0]," ",point[1]," ",point[2]);
+        cube.position.set(point[0], point[1], point[2]);
+        editor.addObject(cube)
         AllAOI.AOIInstances[len-1].vertices.push({
-          at:point,
+          at:new AOI.AOIPoint(point[0],point[1],point[2]),
           vertex:cube
         });
-        editor.addObject(cube);
+        ;
       }
 
     }
@@ -212,4 +219,3 @@
   /* 引入 Editor CSS */
   @import '/three/editor/css/main.css';
   </style>
-  

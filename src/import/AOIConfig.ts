@@ -1,14 +1,19 @@
 // AOIConfig.ts
 import * as THREE from 'three';
 export class AOIPoint {
-    x!: number;
-    y!: number;
-    z!: number;
+    x: number;
+    y: number;
+    z: number;
+    constructor(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
   }
   
 export class AOI {
 name: string;
-aoi: AOIPoint[];
+aoi: number[][];
 scale: number;
 id: number;
 
