@@ -122,7 +122,7 @@ export class AOIInstance {
         mesh.name = `${aoiInstance.name}_mesh`;
 
         aoiInstance.triangles_mesh=mesh;
-        console.log(aoiInstance.triangles_mesh);
+        //console.log(aoiInstance.triangles_mesh);
     }
 }
 
@@ -131,3 +131,9 @@ export class AllAOIInstance {
     public non_distracted_aois: string[] = [];
     AOIInstances:AOIInstance[] = [];
 }
+
+export enum EditMode_c{
+    XiFu,
+    Addvertices,
+    None,
+  }

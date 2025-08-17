@@ -31,6 +31,7 @@
     try {
       const text = await file.text();
       const jsonData = JSON.parse(text);
+      console.log(jsonData);
       const config = new AOIConfig(jsonData);
       emit("imported", config);
     } catch (err) {

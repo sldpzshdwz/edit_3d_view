@@ -9,7 +9,10 @@
     <el-space direction="horizontal" size="medium" class="f1">
       <LoadJson @imported="handleImported" class="f2"></LoadJson>
       <AOIExporter :allAOI="AllAOI"></AOIExporter>
+      <button @click="BianJi">编辑模式</button>
       <button @click="XiFu">顶点吸附</button>
+      <button @click="Addvertices">增加节点</button>
+      <status :status="EditMode2" :From="From2"></status> 
     </el-space>
 
 </template>
@@ -56,11 +59,27 @@
   import LoadJson from '@/components/LoadJson.vue';
   import AOIExporter from '@/components/ExportJson.vue';
   import * as AOI from '@/import/AOIConfig';
-  let isXiFu=false;
-  let XiFuFrom:THREE.Mesh|null=null;
+  import { EditMode_c } from '@/import/AOIConfig';
+  import status from '@/components/status.vue';
+
+  let EditMode=EditMode_c.None;
+  let From:THREE.Mesh|null=null;
+  
+  let EditMode2=ref(EditMode_c.None);
+  let From2=ref<THREE.Mesh|null>(null);
+  
+  const BianJi=()=>{
+    EditMode=EditMode_c.None;
+    From=null;
+  }
   const XiFu=()=>{
-    isXiFu=true;
-    XiFuFrom=null;
+    EditMode=EditMode_c.XiFu;
+    From=null;
+  }
+
+  const Addvertices=()=>{
+    EditMode=EditMode_c.Addvertices;
+    From=null;
   }
   function updateShow(AllAOI:AOI.AllAOIInstance){
     AllAOI.AOIInstances.forEach((aoiInstance: AOI.AOIInstance) => {
@@ -117,9 +136,10 @@
         console.error(`AOI ${aoi.name} 缺少有效的点数组`);
         continue;
       }
-      console.log(aoi.aoi);
+      //console.log(aoi.aoi);
       for (const point of aoi.aoi) {
         let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
+        cube.name=instance.name;
         // cube.position.set(0, 0, 0);
         cube.position.set(point[0], point[1], point[2]);
         editor.addObject(cube)
@@ -214,15 +234,10 @@
     // ServiceWorker
 
 		if ( 'serviceWorker' in navigator ) {
-
         try {
-
             navigator.serviceWorker.register( 'three/editor/sw.js' );
-
         } catch ( error ) {
-
         }
-
         }
     });
 
@@ -230,23 +245,81 @@
     let frameCount = 0;
 
     function animate() {
+      
       requestAnimationFrame(animate);
-      if (isXiFu){
-        if (XiFuFrom && XiFuFrom!=editor.selected){
-          XiFuFrom.position.copy(editor.selected.position);
-          isXiFu=false;
-        }else{
-          if (XiFuFrom===null){
-            XiFuFrom=editor.selected;
+
+      switch (EditMode) {
+        case EditMode_c.XiFu:
+          if (From && From!=editor.selected){
+            From.position.copy(editor.selected.position);
+            EditMode=EditMode_c.None;
+          }else{
+            if (From===null){
+              From=editor.selected;
+            }
           }
-          
-        }
+          break;
+        case EditMode_c.Addvertices:
+          if (From!=null && From!=editor.selected){
+            let first:THREE.Mesh=From,last=editor.selected;
+            if (first.name!=last.name){
+              alert("错误! 不能在不同的AOI中增加节点");
+            }else {
+              let instance=AllAOI.AOIInstances.find((item)=>item.name==first.name);
+              if (instance){
+                let first_index=instance.vertices.findIndex((item)=>item.vertex==first);
+                let last_index=instance.vertices.findIndex((item)=>item.vertex==last);
+                if (first_index>last_index){
+                  let temp=first_index;
+                  first_index=last_index;
+                  last_index=temp;
+                }
+                let len=instance.vertices.length;//数组长度
+                if (first_index!=-1 && last_index!=-1){
+                  if (Math.abs(first_index-last_index)==1 || first_index===1 && last_index===len-1){
+                    let first_ver=instance.vertices[first_index];
+                    let last_ver=instance.vertices[last_index];
+                    let mid_x=(first_ver.at.x+last_ver.at.x)/2;
+                    let mid_y=(first_ver.at.y+last_ver.at.y)/2;
+                    let mid_z=(first_ver.at.z+last_ver.at.z)/2;
+                    let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
+                    cube.name=instance.name;
+                    cube.position.set(mid_x, mid_y, mid_z);
+                    editor.addObject(cube)
+                    let v=new AOI.vertex();
+                    v.vertex=cube;v.at=new AOI.AOIPoint(mid_x, mid_y, mid_z);
+                    if (last_index===len-1){
+                      instance.vertices.push(v);
+                    }else{
+                      instance.vertices.splice(last_index, 0, v);
+                    }
+                  }else{
+                    alert("错误! 不能在非连续节点之间增加节点");
+                  }
+                }else{
+                  alert("系统错误! 请联系李泽刚修改bug");
+                }
+              }
+            }
+            EditMode=EditMode_c.None;
+          }else{
+            if (From===null){
+              From=editor.selected;
+            }
+          }
+          break;
+        case EditMode_c.None:
+          break;
+        default:
+          break;
       }
 
 
       frameCount++;
       if (frameCount % 5 === 0) {
         updateShow(AllAOI);
+        EditMode2.value=EditMode;
+        From2.value=From;
         frameCount=0;
       }
 
