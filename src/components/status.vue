@@ -43,7 +43,25 @@
         case EditMode_c.None:
         statusText.value='编辑模式';
         break;
-    }    
+        case EditMode_c.Removevertices:
+        statusText.value='删除顶点模式';
+        if(props.From){
+          statusText.value+='  当前选中的第一个对象：'+props.From.name;
+        }
+        break;
+        case EditMode_c.MoveToMid:
+        statusText.value='移动到中点模式1';
+        if(props.From){
+          statusText.value+='  当前选中的第一个对象：'+props.From.name;
+        }
+        break;
+        case EditMode_c.MoveToMid2:
+        statusText.value='移动到中点模式2';
+        if(props.From){
+          statusText.value+='  当前选中的第一个对象：'+props.From.name;
+        }
+        break;
+      }
   }
   watch([() => props.status, () => props.From], () => {
     updateStatusText()

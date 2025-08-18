@@ -5,7 +5,7 @@
         <ul>
           <li class="router"><router-link to="/">首页</router-link></li>
           <li class="router"><router-link to="/editor">编辑器</router-link></li>
-          <li class="router"><router-link to="/about">帮助</router-link></li>
+          <li class="router"><router-link to="/help">帮助</router-link></li>
         </ul>
       </nav>
     </header>

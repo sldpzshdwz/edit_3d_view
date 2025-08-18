@@ -13,9 +13,11 @@
     "three": "^0.179.1",
     "three-gpu-pathtracer": "^0.0.23",
     "vue": "^3.5.18",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "vue3-markdown-it": "^1.0.10"
   },
   "devDependencies": {
+    "markdown-it": "^14.1.0",
     "@types/node": "^24.2.1",
     "@types/three": "^0.179.0",
     "@vitejs/plugin-vue": "^6.0.1",

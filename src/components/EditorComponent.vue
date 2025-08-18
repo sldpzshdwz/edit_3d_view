@@ -12,6 +12,9 @@
       <button @click="BianJi">编辑模式</button>
       <button @click="XiFu">顶点吸附</button>
       <button @click="Addvertices">增加节点</button>
+      <button @click="Removevertices">删除节点</button>
+      <button @click="MoveToMid">移动到中点1</button>
+      <button @click="MoveToMid2">移动到中点2</button>
       <status :status="EditMode2" :From="From2"></status> 
     </el-space>
 
@@ -64,9 +67,11 @@
 
   let EditMode=EditMode_c.None;
   let From:THREE.Mesh|null=null;
-  
+  let mid1:THREE.Mesh|null=null;
+
   let EditMode2=ref(EditMode_c.None);
   let From2=ref<THREE.Mesh|null>(null);
+  
   
   const BianJi=()=>{
     EditMode=EditMode_c.None;
@@ -81,6 +86,19 @@
     EditMode=EditMode_c.Addvertices;
     From=null;
   }
+  const Removevertices=()=>{
+    EditMode=EditMode_c.Removevertices;
+    From=null;
+  }
+  const MoveToMid=()=>{
+    EditMode=EditMode_c.MoveToMid;
+    From=null;
+  }
+  const MoveToMid2=()=>{
+    EditMode=EditMode_c.MoveToMid2;
+    From=null;
+    mid1=null;
+  }
   function updateShow(AllAOI:AOI.AllAOIInstance){
     AllAOI.AOIInstances.forEach((aoiInstance: AOI.AOIInstance) => {
       if (aoiInstance.triangles_mesh){
@@ -89,6 +107,9 @@
       aoiInstance.UpdateAOITriangles();
       editor.scene.add(aoiInstance.triangles_mesh);
     })
+  }
+  function removeSuffix(str: string): string {
+    return str.replace(/_\d+$/, "");
   }
 
   declare global {
@@ -139,7 +160,7 @@
       //console.log(aoi.aoi);
       for (const point of aoi.aoi) {
         let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
-        cube.name=instance.name;
+        cube.name=instance.name+"_"+AllAOI.AOIInstances[len-1].vertices.length;
         // cube.position.set(0, 0, 0);
         cube.position.set(point[0], point[1], point[2]);
         editor.addObject(cube)
@@ -249,6 +270,28 @@
       requestAnimationFrame(animate);
 
       switch (EditMode) {
+        case EditMode_c.Removevertices:
+          if (editor.selected!=null){
+            let v=editor.selected;
+            let instance=AllAOI.AOIInstances.find((item)=>item.name==removeSuffix(v.name));
+            if (instance){
+              let index=instance.vertices.findIndex((item)=>item.vertex==v);
+              if (index!=-1){
+                editor.removeObject(v);
+                instance.vertices.splice(index, 1);
+                // 更新后续顶点的名称
+                for (let i=index;i<instance.vertices.length;i++){
+                  const v=instance.vertices[i].vertex;
+                  if (v){
+                    v.name=instance.name+"_"+i;
+                  }
+                }
+              }
+
+            }
+            EditMode=EditMode_c.None;
+          }
+          break;
         case EditMode_c.XiFu:
           if (From && From!=editor.selected){
             From.position.copy(editor.selected.position);
@@ -262,10 +305,10 @@
         case EditMode_c.Addvertices:
           if (From!=null && From!=editor.selected){
             let first:THREE.Mesh=From,last=editor.selected;
-            if (first.name!=last.name){
+            if (removeSuffix(first.name)!=removeSuffix(last.name)){
               alert("错误! 不能在不同的AOI中增加节点");
             }else {
-              let instance=AllAOI.AOIInstances.find((item)=>item.name==first.name);
+              let instance=AllAOI.AOIInstances.find((item)=>item.name==removeSuffix(first.name));
               if (instance){
                 let first_index=instance.vertices.findIndex((item)=>item.vertex==first);
                 let last_index=instance.vertices.findIndex((item)=>item.vertex==last);
@@ -276,22 +319,30 @@
                 }
                 let len=instance.vertices.length;//数组长度
                 if (first_index!=-1 && last_index!=-1){
-                  if (Math.abs(first_index-last_index)==1 || first_index===1 && last_index===len-1){
+                  if (Math.abs(first_index-last_index)==1 || first_index===0 && last_index===len-1){
                     let first_ver=instance.vertices[first_index];
                     let last_ver=instance.vertices[last_index];
                     let mid_x=(first_ver.at.x+last_ver.at.x)/2;
                     let mid_y=(first_ver.at.y+last_ver.at.y)/2;
                     let mid_z=(first_ver.at.z+last_ver.at.z)/2;
                     let cube:THREE.Mesh = new THREE.Mesh( geometry, material );
-                    cube.name=instance.name;
+                    
                     cube.position.set(mid_x, mid_y, mid_z);
                     editor.addObject(cube)
                     let v=new AOI.vertex();
                     v.vertex=cube;v.at=new AOI.AOIPoint(mid_x, mid_y, mid_z);
                     if (last_index===len-1){
+                      cube.name=instance.name+"_"+(len);
                       instance.vertices.push(v);
                     }else{
+                      cube.name=instance.name+"_"+(last_index);
                       instance.vertices.splice(last_index, 0, v);
+                      for (let i=last_index+1;i<len+1;i++){
+                        const v=instance.vertices[i].vertex;
+                        if (v){
+                          v.name=instance.name+"_"+i;
+                        }
+                      }
                     }
                   }else{
                     alert("错误! 不能在非连续节点之间增加节点");
@@ -305,6 +356,34 @@
           }else{
             if (From===null){
               From=editor.selected;
+            }
+          }
+          break;
+        case EditMode_c.MoveToMid:
+        if (From && From!=editor.selected){
+            let mid_x=(From.position.x+editor.selected.position.x)/2;
+            let mid_y=(From.position.y+editor.selected.position.y)/2;
+            let mid_z=(From.position.z+editor.selected.position.z)/2;
+            From.position.set(mid_x, mid_y, mid_z);
+            EditMode=EditMode_c.None;
+          }else{
+            if (From===null){
+              From=editor.selected;
+            }
+          }
+          break;
+        case EditMode_c.MoveToMid2:
+          if (From && mid1 && editor.selected!=null && From!=editor.selected && mid1!=editor.selected){
+            let mid_x=(editor.selected.position.x+mid1.position.x)/2;
+            let mid_y=(editor.selected.position.y+mid1.position.y)/2;
+            let mid_z=(editor.selected.position.z+mid1.position.z)/2;
+            From.position.set(mid_x, mid_y, mid_z);
+            EditMode=EditMode_c.None;
+          }else{
+            if (From===null&&editor.selected!=null){
+              From=editor.selected;
+            }else if (mid1===null&&editor.selected!=From&&editor.selected!=null){
+              mid1=editor.selected;
             }
           }
           break;

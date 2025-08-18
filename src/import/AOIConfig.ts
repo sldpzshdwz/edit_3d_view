@@ -136,4 +136,7 @@ export enum EditMode_c{
     XiFu,
     Addvertices,
     None,
+    Removevertices,
+    MoveToMid,
+    MoveToMid2
   }
