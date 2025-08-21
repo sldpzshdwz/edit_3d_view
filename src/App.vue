@@ -12,9 +12,8 @@
 
     <main>
       <!-- 这里会显示当前路由对应的组件 -->
-      <keep-alive>
-        <router-view></router-view>
-      </keep-alive>
+
+      <router-view></router-view>
     </main>
   </div>
 </template>

@@ -20,7 +20,7 @@
       router.push('/editor');
     }
     const goToAbout = () => {
-      router.push('/about');
+      router.push('/help');
     }
 
   </script>
